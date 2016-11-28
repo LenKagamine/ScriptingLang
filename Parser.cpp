@@ -83,6 +83,17 @@ Node Parser::stmt(){
         node->left = left;
         node->right = right;
     }
+    else if(type == TOK_IDEN){ // assignment: <iden> = <expr> ;
+        string name = pop().getValue();
+        Node left(new ASTNode(NODE_IDEN, name));
+        pop(); //=
+        Node right(expr());
+        pop(); //;
+
+        node->type = NODE_DECL; //change to assignment node
+        node->left = left;
+        node->right = right;
+    }
     else if(type == TOK_IF){ // if statement: if <expr> then <stmt>+ end
         pop(); //if
         Node cond(expr()); //condition
