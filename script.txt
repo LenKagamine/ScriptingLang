@@ -1,0 +1,5 @@
+var y = 1 + 2 * 3;
+var a = 1 - 2 + 6 * 8 / 8;
+print a;
+print 1+5;
+print 9 - y;

@@ -1,45 +1,16 @@
-#include "Lexer.h"
-#include "Parser.h"
-#include "Generator.h"
-#include "VMachine.h"
+#include "include/Parser.h"
+
+#include <iostream>
 
 using namespace std;
-
-const bool debug = true; // debug output except for vm
-
 int main(){
-
-    Lexer lexer;
-    vector<Token> tokens = lexer.lex("test.txt");
-
-    if(debug){
-        cout << "******* tokens ********\n";
-        for(Token t: tokens){
-            cout << t.getValue() << " ";
-            if(t.getValue() == ";") cout << endl;
-        }
-        cout << endl;
+    try{
+        Parser parser(Lexer("script.txt"));
+        vector<Node> ast = parser.parse();
+        parser.print(ast, 1);
     }
-
-
-    Parser parser;
-    vector<shared_ptr<ASTNode>> tree = parser.load(tokens);
-
-    if(debug){
-        cout << "******* ast ********\n";
-        parser.print(tree, 1);
+    catch(const std::exception& e){
+        std::cerr << e.what() << std::endl;
     }
-
-    Generator gen;
-    vector<Instruction> code = gen.generate(tree);
-
-    if(debug){
-        cout << "******* code ********\n";
-        for(Instruction i: code) cout << i.getName() << " " << i.getValue() << endl;
-        cout << endl << endl;
-    }
-
-    VMachine vm;
-    vm.execute(code);
     return 0;
 }
