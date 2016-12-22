@@ -29,7 +29,7 @@ Token Lexer::readNumber(){
         value += input.get();
         peek = input.peek();
     }
-    return Token(TOK_INT, std::stoi(value));
+    return Token(TOK_INT, value);
 }
 
 Token Lexer::readString(){
@@ -47,16 +47,33 @@ Token Lexer::readIden(){
     while(!input.eof() && isalpha(input.peek())){
         value += input.get();
     }
+    if(value == "var") return Token(TOK_VAR, value);
+    if(value == "if") return Token(TOK_IF, value);
+    if(value == "print") return Token(TOK_PRINT, value);
+    if(value == "function") return Token(TOK_FUNC, value);
     return Token(TOK_IDEN, value);
 }
 
 bool Lexer::isPunct(char c){
-    std::string punctList = ",;(){}[]";
+    std::string punctList = ",;(){}";
     return punctList.find_first_of(c) != std::string::npos;
 }
 
+Token Lexer::readPunct(){
+    std::string value(1, input.get()); //puncutation is one character
+
+    if(value == ",") return Token(TOK_COMMA, value);
+    if(value == ";") return Token(TOK_SEMI, value);
+    if(value == "(") return Token(TOK_LPAREN, value);
+    if(value == ")") return Token(TOK_RPAREN, value);
+    if(value == "{") return Token(TOK_LBRACE, value);
+    if(value == "}") return Token(TOK_RBRACE, value);
+
+    throw LexerException("Unknown punctuation: " + value);
+}
+
 bool Lexer::isOper(char c){
-    std::string operList = "+-*/%=&|<>!";
+    std::string operList = "+-*/=";
     return operList.find_first_of(c) != std::string::npos;
 }
 
@@ -65,33 +82,44 @@ Token Lexer::readOper(){
     while(!input.eof() && isOper(input.peek())){
         value += input.get();
     }
-    return Token(TOK_OPER, value);
+    if(value == "+") return Token(TOK_PLUS, value);
+    if(value == "-") return Token(TOK_MINUS, value);
+    if(value == "*") return Token(TOK_MULT, value);
+    if(value == "/") return Token(TOK_DIV, value);
+    if(value == "=") return Token(TOK_EQUAL, value);
+
+    throw LexerException("Unknown operation: " + value);
 }
 
 Token Lexer::step(){
     skip();
 
-    if(input.eof()) return Token(TOK_NULL, 0);
+    if(input.eof()) return Token(TOK_NULL, "");
 
     char peek = input.peek();
 
     if(peek == '"') return readString();
     if(isdigit(peek)) return readNumber();
     if(isalpha(peek)) return readIden();
-    if(isPunct(peek)) return Token(TOK_PUNCT, std::string(1, input.get()));
+    if(isPunct(peek)) return readPunct();
     if(isOper(peek)) return readOper();
 
-    throw "Unknown character: " + peek;
+    throw LexerException("Unknown character: " + peek);
 }
 
 Token Lexer::peek(){
     return current;
 }
 
-Token Lexer::next(){
+Token Lexer::next(){ //should next have a check like consume?
     Token tok = current;
     current = step();
     return tok;
+}
+
+void Lexer::consume(std::string tok){
+    if(tok != current.value) throw LexerException("consume expected '" + tok + "', got '" + current.value + "'");
+    current = step();
 }
 
 bool Lexer::eof(){
@@ -100,5 +128,4 @@ bool Lexer::eof(){
 }
 
 
-Lexer::~Lexer(){
-}
+Lexer::~Lexer(){}

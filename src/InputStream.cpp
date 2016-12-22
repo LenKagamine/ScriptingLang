@@ -14,12 +14,12 @@ InputStream::InputStream(std::string filename){
 }
 
 char InputStream::peek(){
-    if(pos >= source.length()) throw "Cannot peek, end of file";
+    if(pos >= source.length()) throw "InputStream: Cannot peek, end of file";
     return source[pos];
 }
 
 char InputStream::get(){
-    if(pos >= source.length()) throw "Cannot peek, end of file";
+    if(pos >= source.length()) throw "InputStream: Cannot peek, end of file";
     return source[pos++];
 }
 

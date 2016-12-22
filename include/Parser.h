@@ -17,7 +17,9 @@ class Parser
         Node expr();
         Node term();
         Node factor();
+        std::vector<Node> args();
         std::vector<Node> parse();
+
 
         void print(std::vector<Node> tree, int depth);
         void print(Node node, int depth);

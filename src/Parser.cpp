@@ -2,39 +2,41 @@
 
 #include <iostream>
 using namespace std;
+
 Parser::Parser(Lexer lex): lexer(lex){}
 
 void Parser::temp(){
     while(!lexer.eof()){
         Token t = lexer.next();
-        if(t.type == TOK_INT) cout << "int  : " << t.int_value << endl;
-        else if(t.type == TOK_STR) cout << "str  : " << t.str_value << endl;
-        else if(t.type == TOK_IDEN) cout << "iden : " << t.str_value << endl;
-        else if(t.type == TOK_PUNCT) cout << "punct: " << t.str_value << endl;
-        else if(t.type == TOK_OPER) cout << "oper : " << t.str_value << endl;
+        if(t.type == TOK_INT) cout << "int  : " << t.value << endl;
+        else if(t.type == TOK_STR) cout << "str  : " << t.value << endl;
+        else if(t.type == TOK_IDEN) cout << "iden : " << t.value << endl;
+        else cout << "other: " << t.value << endl;
     }
 }
 
 Node Parser::factor(){
-    if(lexer.peek().type == TOK_INT){
-        int nextToken = lexer.next().int_value;
-        Node node(new ASTNode(NODE_INT, to_string(nextToken)));
-        return node;
+    Token nextToken = lexer.next();
+    Node node;
+    if(nextToken.type == TOK_INT){
+        node = Node(new ASTNode(NODE_INT, nextToken.value));
+    }
+    else if(nextToken.type == TOK_STR){
+        node = Node(new ASTNode(NODE_STR, nextToken.value));
     }
     else{
-        string nextToken = lexer.next().str_value;
-        Node node(new ASTNode(NODE_IDEN, nextToken));
-        return node;
+        node = Node(new ASTNode(NODE_IDEN, nextToken.value));
     }
+    return node;
 }
 
 Node Parser::term(){
     Node f(factor());
     Token nextToken = lexer.peek();
-    while(!lexer.eof() && (nextToken.str_value == "*" || nextToken.str_value == "/")){
+    while(!lexer.eof() && (nextToken.type == TOK_MULT || nextToken.type == TOK_DIV)){
         lexer.next();
 
-        Node node(new ASTNode(NODE_BINOP, nextToken.str_value));
+        Node node(new ASTNode(NODE_BINOP, nextToken.value));
         node->left = f;
         node->right = factor();
         f = node;
@@ -48,10 +50,10 @@ Node Parser::expr(){
     Node t(term());
     Token nextToken = lexer.peek();
 
-    while(!lexer.eof() && (nextToken.str_value == "+" || nextToken.str_value == "-")){
+    while(!lexer.eof() && (nextToken.type == TOK_PLUS || nextToken.type == TOK_MINUS)){
         lexer.next();
 
-        Node node(new ASTNode(NODE_BINOP, nextToken.str_value));
+        Node node(new ASTNode(NODE_BINOP, nextToken.value));
         node->left = t;
         node->right = term();
         t = node;
@@ -61,44 +63,76 @@ Node Parser::expr(){
     return t;
 }
 
+std::vector<Node> Parser::args(){
+    vector<Node> arglist;
+    if(lexer.peek().type == TOK_RPAREN) return arglist; //no arguments
+
+    std::string name = lexer.next().value;
+    arglist.push_back(Node(new ASTNode(NODE_ARG, name)));
+
+    while(lexer.peek().type == TOK_COMMA){
+        lexer.consume(",");
+        name = lexer.next().value;
+        arglist.push_back(Node(new ASTNode(NODE_ARG, name)));
+    }
+    return arglist;
+}
+
 Node Parser::stmt(){
     Node node(new ASTNode);
     TokenType type = lexer.peek().type;
 
-    if(type == TOK_IDEN && lexer.peek().str_value == "var"){
-        lexer.next();
-        std::string name = lexer.next().str_value;
+    if(type == TOK_VAR){
+        lexer.consume("var");
+        std::string name = lexer.next().value;
         Node left(new ASTNode(NODE_IDEN, name));
-        lexer.next();
+        lexer.consume("=");
         Node right(expr());
-        lexer.next();
+        lexer.consume(";");
 
         node->type = NODE_DECL;
         node->left = left;
         node->right = right;
     }
-    else if(type == TOK_IDEN && lexer.peek().str_value == "if"){
-        lexer.next();
+    else if(type == TOK_IF){
+        lexer.consume("if");
+        lexer.consume("(");
         Node cond(expr());
-        lexer.next();
+        lexer.consume(")");
+        lexer.consume("{");
         vector<Node> block(parse());
-        lexer.next();
+        lexer.consume("}");
 
         node->type = NODE_IF;
         node->cond = cond;
         node->block = block;
     }
-    else if(type == TOK_IDEN && lexer.peek().str_value == "print"){
-        lexer.next();
+    else if(type == TOK_PRINT){
+        lexer.consume("print");
         Node exp(expr());
-        lexer.next();
+        lexer.consume(";");
 
         node->type = NODE_PRINT;
         node->exp = exp;
     }
+    else if(type == TOK_FUNC){
+        lexer.consume("function");
+        std::string name = lexer.next().value;
+        lexer.consume("(");
+        vector<Node> param(args());
+        lexer.consume(")");
+        lexer.consume("{");
+        vector<Node> block(parse());
+        lexer.consume("}");
+
+        node->type = NODE_FUNC;
+        node->value = name;
+        node->param = param;
+        node->block = block;
+    }
     else{
-        node = expr();
-        lexer.next();
+        node = expr(); //should this be an error?
+        lexer.consume(";");
     }
 
     return node;
@@ -106,15 +140,14 @@ Node Parser::stmt(){
 
 std::vector<Node> Parser::parse(){
     std::vector<Node> stmts;
-    while(!lexer.eof()){
+    while(!lexer.eof() && lexer.peek().type != TOK_RBRACE){
         stmts.push_back(stmt());
-        if(lexer.peek().type == TOK_PUNCT && lexer.peek().str_value == "}") break; // eww
     }
     return stmts;
 }
 
 void Parser::print(Node node, int depth){
-    string nodetype_str[] = {"NODE_INT","NODE_BINOP","NODE_DECL","NODE_IDEN","NODE_PRINT","NODE_IF","NODE_STMTS"};
+    string nodetype_str[] = {"NODE_INT","NODE_STR","NODE_BINOP","NODE_DECL","NODE_IDEN","NODE_PRINT","NODE_IF","NODE_FUNC","NODE_ARG","NODE_STMTS"};
     Node root(node);
     if(root){
         string tab;
@@ -140,9 +173,14 @@ void Parser::print(Node node, int depth){
             cout << "cond: ";
             print(node->cond, depth+1);
         }
+        if(!node->param.empty()){
+            cout << tab;
+            cout << "param: \n";
+            print(node->param, depth+1);
+        }
         if(!node->block.empty()){
             cout << tab;
-            cout << "block: ";
+            cout << "block: \n";
             print(node->block, depth+1);
         }
     }

@@ -7,12 +7,15 @@
 
 enum NodeType{
     NODE_INT,
+    NODE_STR,
     NODE_BINOP,
     NODE_DECL,
     NODE_IDEN,
     NODE_PRINT,
 
     NODE_IF,
+    NODE_FUNC,
+    NODE_ARG,
     NODE_STMTS
 };
 
@@ -31,7 +34,10 @@ class ASTNode{
 
         //if, while
         Node cond;
+        //if, while, function
         std::vector<Node> block;
+        //function
+        std::vector<Node> param;
 
         //print
         Node exp;

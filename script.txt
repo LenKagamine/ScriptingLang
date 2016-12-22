@@ -1,5 +1,9 @@
-var y = 1 + 2 * 3;
-var a = 1 - 2 + 6 * 8 / 8;
-print a;
-print 1+5;
-print 9 - y;
+var z = "asdf";
+if(1 + 2){
+	print z;
+	var y = 5*8;
+}
+function test(a, g, e){
+	print z;
+	var a = 1+2;
+}
