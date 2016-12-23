@@ -94,7 +94,7 @@ Token Lexer::readOper(){
 Token Lexer::step(){
     skip();
 
-    if(input.eof()) return Token(TOK_NULL, "");
+    if(input.eof()) return Token(TOK_NULL, ""); //null token
 
     char peek = input.peek();
 
@@ -118,13 +118,13 @@ Token Lexer::next(){ //should next have a check like consume?
 }
 
 void Lexer::consume(std::string tok){
-    if(tok != current.value) throw LexerException("consume expected '" + tok + "', got '" + current.value + "'");
+    if(tok != current.getValue()) throw LexerException("consume expected '" + tok + "', got '" + current.getValue() + "'");
     current = step();
 }
 
 bool Lexer::eof(){
     Token tok = peek();
-    return tok.type == TOK_NULL;
+    return tok.getType() == TOK_NULL;
 }
 
 

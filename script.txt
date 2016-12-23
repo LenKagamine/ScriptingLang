@@ -1,9 +1,5 @@
-var z = "asdf";
-if(1 + 2){
-	print z;
-	var y = 5*8;
+var z = 1 + 5;
+if(1 - 1){
+	var z = 5+2;
 }
-function test(a, g, e){
-	print z;
-	var a = 1+2;
-}
+print z;

@@ -11,7 +11,6 @@ class Parser
 
     public:
         Parser(Lexer lex);
-        void temp();
 
         Node stmt();
         Node expr();
@@ -19,7 +18,6 @@ class Parser
         Node factor();
         std::vector<Node> args();
         std::vector<Node> parse();
-
 
         void print(std::vector<Node> tree, int depth);
         void print(Node node, int depth);

@@ -11,15 +11,19 @@ enum TokenType{
     TOK_NULL //end token
 };
 
-struct Token{
-    TokenType type;
-    std::string value;
+class Token{
+    private:
+        TokenType type;
+        std::string value;
 
-    Token();
+    public:
+        Token();
+        Token(TokenType tt, std::string val);
 
-    Token(TokenType tt, std::string val);
+        TokenType getType();
+        std::string getValue();
 
-    virtual ~Token(); //is this necessary?
+        virtual ~Token(); //is this necessary?
 };
 
 #endif // TOKEN_H

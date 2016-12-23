@@ -1,5 +1,5 @@
-#ifndef AST_H
-#define AST_H
+#ifndef ASTNODE_H
+#define ASTNODE_H
 
 #include <string>
 #include <vector>
@@ -15,8 +15,7 @@ enum NodeType{
 
     NODE_IF,
     NODE_FUNC,
-    NODE_ARG,
-    NODE_STMTS
+    NODE_ARG
 };
 
 class ASTNode;
@@ -44,9 +43,8 @@ class ASTNode{
 
         ASTNode();
         ASTNode(NodeType type, std::string value);
-        ASTNode(std::vector<Node> stmts);
 
         ~ASTNode();
 };
 
-#endif // AST_H
+#endif // ASTNODE_H

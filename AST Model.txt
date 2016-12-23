@@ -1,0 +1,34 @@
+ScriptingLang AST Model
+
+prog = [stmt] # not used in ast, parse() returns vector of Nodes
+
+stmt = decl-stmt
+       if-stmt
+       print-stmt
+       func-stmt
+       expr ;
+
+decl-stmt = var <name> = expr ;
+if-stmt = if ( args ) { [stmt] }
+print-stmt = print expr
+func-stmt = function <name> ( args ) { [stmt] }
+
+expr = term
+       term + expr
+       term - expr
+
+term = factor
+       factor * term
+       factor / term
+
+factor = int
+         str
+         iden
+
+args = []
+       arg
+       arg [ , arg ]
+
+basic types: int str
+special names: iden arg
+key words: var if print function

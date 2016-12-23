@@ -5,27 +5,17 @@ using namespace std;
 
 Parser::Parser(Lexer lex): lexer(lex){}
 
-void Parser::temp(){
-    while(!lexer.eof()){
-        Token t = lexer.next();
-        if(t.type == TOK_INT) cout << "int  : " << t.value << endl;
-        else if(t.type == TOK_STR) cout << "str  : " << t.value << endl;
-        else if(t.type == TOK_IDEN) cout << "iden : " << t.value << endl;
-        else cout << "other: " << t.value << endl;
-    }
-}
-
 Node Parser::factor(){
     Token nextToken = lexer.next();
     Node node;
-    if(nextToken.type == TOK_INT){
-        node = Node(new ASTNode(NODE_INT, nextToken.value));
+    if(nextToken.getType() == TOK_INT){
+        node = Node(new ASTNode(NODE_INT, nextToken.getValue()));
     }
-    else if(nextToken.type == TOK_STR){
-        node = Node(new ASTNode(NODE_STR, nextToken.value));
+    else if(nextToken.getType() == TOK_STR){
+        node = Node(new ASTNode(NODE_STR, nextToken.getValue()));
     }
     else{
-        node = Node(new ASTNode(NODE_IDEN, nextToken.value));
+        node = Node(new ASTNode(NODE_IDEN, nextToken.getValue()));
     }
     return node;
 }
@@ -33,10 +23,10 @@ Node Parser::factor(){
 Node Parser::term(){
     Node f(factor());
     Token nextToken = lexer.peek();
-    while(!lexer.eof() && (nextToken.type == TOK_MULT || nextToken.type == TOK_DIV)){
+    while(!lexer.eof() && (nextToken.getType() == TOK_MULT || nextToken.getType() == TOK_DIV)){
         lexer.next();
 
-        Node node(new ASTNode(NODE_BINOP, nextToken.value));
+        Node node(new ASTNode(NODE_BINOP, nextToken.getValue()));
         node->left = f;
         node->right = factor();
         f = node;
@@ -50,10 +40,10 @@ Node Parser::expr(){
     Node t(term());
     Token nextToken = lexer.peek();
 
-    while(!lexer.eof() && (nextToken.type == TOK_PLUS || nextToken.type == TOK_MINUS)){
+    while(!lexer.eof() && (nextToken.getType() == TOK_PLUS || nextToken.getType() == TOK_MINUS)){
         lexer.next();
 
-        Node node(new ASTNode(NODE_BINOP, nextToken.value));
+        Node node(new ASTNode(NODE_BINOP, nextToken.getValue()));
         node->left = t;
         node->right = term();
         t = node;
@@ -65,14 +55,14 @@ Node Parser::expr(){
 
 std::vector<Node> Parser::args(){
     vector<Node> arglist;
-    if(lexer.peek().type == TOK_RPAREN) return arglist; //no arguments
+    if(lexer.peek().getType() == TOK_RPAREN) return arglist; //no arguments
 
-    std::string name = lexer.next().value;
+    std::string name = lexer.next().getValue();
     arglist.push_back(Node(new ASTNode(NODE_ARG, name)));
 
-    while(lexer.peek().type == TOK_COMMA){
+    while(lexer.peek().getType() == TOK_COMMA){
         lexer.consume(",");
-        name = lexer.next().value;
+        name = lexer.next().getValue();
         arglist.push_back(Node(new ASTNode(NODE_ARG, name)));
     }
     return arglist;
@@ -80,11 +70,11 @@ std::vector<Node> Parser::args(){
 
 Node Parser::stmt(){
     Node node(new ASTNode);
-    TokenType type = lexer.peek().type;
+    TokenType type = lexer.peek().getType();
 
     if(type == TOK_VAR){
         lexer.consume("var");
-        std::string name = lexer.next().value;
+        std::string name = lexer.next().getValue();
         Node left(new ASTNode(NODE_IDEN, name));
         lexer.consume("=");
         Node right(expr());
@@ -117,7 +107,7 @@ Node Parser::stmt(){
     }
     else if(type == TOK_FUNC){
         lexer.consume("function");
-        std::string name = lexer.next().value;
+        std::string name = lexer.next().getValue();
         lexer.consume("(");
         vector<Node> param(args());
         lexer.consume(")");
@@ -140,14 +130,14 @@ Node Parser::stmt(){
 
 std::vector<Node> Parser::parse(){
     std::vector<Node> stmts;
-    while(!lexer.eof() && lexer.peek().type != TOK_RBRACE){
+    while(!lexer.eof() && lexer.peek().getType() != TOK_RBRACE){
         stmts.push_back(stmt());
     }
     return stmts;
 }
 
 void Parser::print(Node node, int depth){
-    string nodetype_str[] = {"NODE_INT","NODE_STR","NODE_BINOP","NODE_DECL","NODE_IDEN","NODE_PRINT","NODE_IF","NODE_FUNC","NODE_ARG","NODE_STMTS"};
+    string nodetype_str[] = {"NODE_INT","NODE_STR","NODE_BINOP","NODE_DECL","NODE_IDEN","NODE_PRINT","NODE_IF","NODE_FUNC","NODE_ARG"};
     Node root(node);
     if(root){
         string tab;
